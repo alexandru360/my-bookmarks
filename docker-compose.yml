@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  app:
+    image: ghcr.io/YOUR_GITHUB_USER/my-bookmarks:latest
+    # Or build locally:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    container_name: my-bookmarks
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # ── Required: create at console.cloud.google.com ──
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      # ── Change to a long random string ──
+      JWT_SECRET: ${JWT_SECRET:-change-me}
+      # ── Set to your public URL (same for frontend + backend in single container) ──
+      BACKEND_URL: ${APP_URL:-http://localhost:3000}
+      FRONTEND_URL: ${APP_URL:-http://localhost:3000}
+      DB_PATH: /app/storage/data/bookmarks.db
+      LOGS_DIR: /app/storage/logs
+    volumes:
+      # Everything persisted in one folder: data/, logs/, config/
+      - ./data:/app/storage
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

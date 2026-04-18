@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+data/
+backend/backend-data/
+**/*.log
+.git
+.env
+extension/node_modules
+extension/package-lock.json
