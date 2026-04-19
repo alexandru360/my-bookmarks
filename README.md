@@ -1,7 +1,7 @@
 # 🔖 My Bookmarks
 
-[![Build & Push Docker](https://github.com/YOUR_GITHUB_USER/my-bookmarks/actions/workflows/docker.yml/badge.svg)](https://github.com/YOUR_GITHUB_USER/my-bookmarks/actions/workflows/docker.yml)
-[![Docker Image](https://ghcr.io/YOUR_GITHUB_USER/my-bookmarks)](https://github.com/YOUR_GITHUB_USER/my-bookmarks/pkgs/container/my-bookmarks)
+[![Build & Push Docker](https://github.com/alex360/my-bookmarks/actions/workflows/docker.yml/badge.svg)](https://github.com/alex360/my-bookmarks/actions/workflows/docker.yml)
+[![Docker Hub](https://img.shields.io/docker/pulls/alex360/my-bookmarks)](https://hub.docker.com/r/alex360/my-bookmarks)
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
 A self-hosted bookmark manager with a browser extension for Chrome and Firefox.
@@ -14,7 +14,7 @@ A self-hosted bookmark manager with a browser extension for Chrome and Firefox.
 
 ```bash
 # 1. Clone
-git clone https://github.com/YOUR_GITHUB_USER/my-bookmarks.git
+git clone https://github.com/alex360/my-bookmarks.git
 cd my-bookmarks
 
 # 2. Configure
@@ -46,7 +46,7 @@ docker compose up -d
 | Field | Value |
 |---|---|
 | **Name** | `my-bookmarks` |
-| **Repository** | `ghcr.io/YOUR_GITHUB_USER/my-bookmarks:latest` |
+| **Repository** | `alex360/my-bookmarks:latest` |
 | **Network Type** | `bridge` |
 | **Port** | Host: `3000` → Container: `3000` |
 | **Volume** | Host: `/mnt/user/appdata/my-bookmarks` → Container: `/app/storage` |
