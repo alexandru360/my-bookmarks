@@ -1,39 +1,62 @@
 import { Injectable } from '@nestjs/common';
 import { BookmarksService } from '../bookmarks/bookmarks.service';
+import { CategoriesService } from '../categories/categories.service';
 
 interface ParsedBookmark {
   url: string;
   title: string;
   tags?: string;
   favicon?: string;
+  folderName?: string;
 }
 
 @Injectable()
 export class ImportExportService {
-  constructor(private bookmarksService: BookmarksService) {}
+  constructor(
+    private bookmarksService: BookmarksService,
+    private categoriesService: CategoriesService,
+  ) {}
 
-  // Parse Chrome/Firefox Netscape bookmark HTML format
+  // Parse Chrome/Firefox Netscape bookmark HTML format preserving folder hierarchy
   parseNetscapeHtml(html: string): ParsedBookmark[] {
     const bookmarks: ParsedBookmark[] = [];
-    const anchorRegex = /<A\s+([^>]+)>(.*?)<\/A>/gi;
-    let match: RegExpExecArray | null;
+    const folderStack: string[] = [];
+    const lines = html.split('\n');
 
-    while ((match = anchorRegex.exec(html)) !== null) {
-      const attrs = match[1];
-      const title = match[2].replace(/<[^>]+>/g, '').trim();
-      const hrefMatch = attrs.match(/HREF="([^"]+)"/i);
-      const iconMatch = attrs.match(/ICON="([^"]+)"/i);
-      const tagsMatch = attrs.match(/TAGS="([^"]+)"/i);
+    for (const line of lines) {
+      const trimmed = line.trim();
 
-      if (hrefMatch && title) {
-        bookmarks.push({
-          url: hrefMatch[1],
-          title,
-          favicon: iconMatch?.[1],
-          tags: tagsMatch?.[1],
-        });
+      const h3Match = trimmed.match(/<H3[^>]*>(.*?)<\/H3>/i);
+      if (h3Match) {
+        folderStack.push(h3Match[1].trim());
+        continue;
+      }
+
+      if (/^<\/DL>/i.test(trimmed)) {
+        folderStack.pop();
+        continue;
+      }
+
+      const aMatch = trimmed.match(/<A\s+([^>]+)>(.*?)<\/A>/i);
+      if (aMatch) {
+        const attrs = aMatch[1];
+        const title = aMatch[2].replace(/<[^>]+>/g, '').trim();
+        const hrefMatch = attrs.match(/HREF="([^"]+)"/i);
+        const iconMatch = attrs.match(/ICON="([^"]+)"/i);
+        const tagsMatch = attrs.match(/TAGS="([^"]+)"/i);
+
+        if (hrefMatch && title) {
+          bookmarks.push({
+            url: hrefMatch[1],
+            title,
+            favicon: iconMatch?.[1],
+            tags: tagsMatch?.[1],
+            folderName: folderStack.length > 0 ? folderStack[folderStack.length - 1] : undefined,
+          });
+        }
       }
     }
+
     return bookmarks;
   }
 
@@ -50,7 +73,31 @@ export class ImportExportService {
       parsed = this.parseNetscapeHtml(fileContent);
     }
 
-    return this.bookmarksService.bulkCreate(userId, parsed);
+    // Create categories for unique folder names and build a name→id map
+    const folderCategoryMap = new Map<string, number>();
+    const uniqueFolders = [...new Set(parsed.map(b => b.folderName).filter(Boolean))] as string[];
+
+    const existingCategories = await this.categoriesService.findAll(userId);
+    for (const cat of existingCategories) {
+      folderCategoryMap.set(cat.name, cat.id);
+    }
+
+    for (const folder of uniqueFolders) {
+      if (!folderCategoryMap.has(folder)) {
+        const created = await this.categoriesService.create(userId, { name: folder, color: '#7c3aed' });
+        folderCategoryMap.set(folder, created.id);
+      }
+    }
+
+    const records = parsed.map(b => ({
+      url: b.url,
+      title: b.title,
+      favicon: b.favicon,
+      tags: b.tags,
+      categoryId: b.folderName ? folderCategoryMap.get(b.folderName) : undefined,
+    }));
+
+    return this.bookmarksService.bulkCreate(userId, records);
   }
 
   async exportNetscape(userId: number): Promise<string> {
