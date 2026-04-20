@@ -11,6 +11,9 @@ function getConfig() {
   });
 }
 
+// Incremented whenever the user takes an explicit action, so stale init() calls don't override the UI.
+let initGeneration = 0;
+
 // ── UI state ──────────────────────────────────────────────────
 function showSection(name) {
   ['auth-section', 'settings-section', 'main-section'].forEach(id => {
@@ -48,7 +51,10 @@ async function loadCategories(apiUrl, token) {
 
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
+  const gen = ++initGeneration;
   const { apiUrl, token } = await getConfig();
+  if (gen !== initGeneration) return;
+
   $('dashboard-link').href = apiUrl;
 
   if (!token) {
@@ -63,10 +69,12 @@ async function init() {
     });
     if (!res.ok) throw new Error('invalid');
   } catch {
+    if (gen !== initGeneration) return;
     showSection('auth-section');
     return;
   }
 
+  if (gen !== initGeneration) return;
   showSection('main-section');
 
   // Fill current tab info
@@ -126,8 +134,10 @@ $('login-btn').addEventListener('click', async () => {
 });
 
 $('settings-btn').addEventListener('click', async () => {
+  initGeneration++; // cancel any in-flight init()
   const { apiUrl } = await getConfig();
   $('api-url').value = apiUrl;
+  $('settings-status').classList.add('hidden');
   showSection('settings-section');
 });
 
@@ -137,7 +147,11 @@ $('save-settings-btn').addEventListener('click', async () => {
   const val = $('api-url').value.trim().replace(/\/$/, '');
   if (!val) return;
   await new Promise(r => chrome.storage.local.set({ apiUrl: val }, r));
-  init();
+  const el = $('settings-status');
+  el.textContent = 'Settings saved!';
+  el.className = 'status success';
+  el.classList.remove('hidden');
+  setTimeout(() => { el.classList.add('hidden'); init(); }, 1500);
 });
 
 $('logout-btn').addEventListener('click', async () => {
