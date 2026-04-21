@@ -49,3 +49,24 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Deploy on Unraid via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.UNRAID_HOST }}
+          username: ${{ secrets.UNRAID_USER }}
+          key: ${{ secrets.UNRAID_SSH_KEY }}
+          script: |
+            docker pull alex360/my-bookmarks:latest
+            docker restart my-bookmarks
