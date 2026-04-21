@@ -69,8 +69,8 @@ jobs:
           key: ${{ secrets.UNRAID_SSH_KEY }}
           script: |
             docker pull alex360/my-bookmarks:latest
-            docker stop My-Bookmarks 2>/dev/null || true
-            docker rm My-Bookmarks 2>/dev/null || true
+            docker stop My-Bookmarks my-bookmarks 2>/dev/null || true
+            docker rm My-Bookmarks my-bookmarks 2>/dev/null || true
             docker run -d \
               --name My-Bookmarks \
               --restart unless-stopped \
