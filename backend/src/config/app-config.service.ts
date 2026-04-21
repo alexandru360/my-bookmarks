@@ -19,10 +19,10 @@ export class AppConfigService implements OnModuleInit {
   constructor() {
     const storagePath = process.env.STORAGE_PATH || './storage';
     this.configPath = resolve(storagePath, 'config', 'config.json');
+    this.config = this.load();
   }
 
   onModuleInit() {
-    this.config = this.load();
     this.validate();
   }
 
