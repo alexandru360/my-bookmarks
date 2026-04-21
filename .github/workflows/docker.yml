@@ -68,12 +68,11 @@ jobs:
           username: ${{ secrets.UNRAID_USER }}
           key: ${{ secrets.UNRAID_SSH_KEY }}
           script: |
+            if ! docker inspect My-Bookmarks > /dev/null 2>&1; then
+              echo "WARNING: container My-Bookmarks not found on this server, skipping deployment"
+              exit 0
+            fi
+            docker stop My-Bookmarks
+            docker rmi alex360/my-bookmarks:latest 2>/dev/null || true
             docker pull alex360/my-bookmarks:latest
-            PORTS=$(docker inspect My-Bookmarks --format '{{range $p, $conf := .HostConfig.PortBindings}}-p {{(index $conf 0).HostPort}}:{{$p}} {{end}}' 2>/dev/null)
-            VOLS=$(docker inspect My-Bookmarks --format '{{range .HostConfig.Binds}}-v {{.}} {{end}}' 2>/dev/null)
-            ENVS=$(docker inspect My-Bookmarks --format '{{range .Config.Env}}-e {{.}} {{end}}' 2>/dev/null)
-            docker stop My-Bookmarks 2>/dev/null || true
-            docker rm My-Bookmarks 2>/dev/null || true
-            docker run -d --name My-Bookmarks --restart unless-stopped \
-              $PORTS $VOLS $ENVS \
-              alex360/my-bookmarks:latest
+            docker start My-Bookmarks
