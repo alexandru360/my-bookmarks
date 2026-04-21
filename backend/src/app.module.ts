@@ -12,14 +12,15 @@ import { ImportExportModule } from './import-export/import-export.module';
 import { User } from './users/user.model';
 import { Bookmark } from './bookmarks/bookmark.model';
 import { Category } from './categories/category.model';
-import { winstonConfig } from './logger';
+import { buildWinstonConfig } from './logger';
+import { AppConfigService } from './config/app-config.service';
 
 const dbPath = process.env.DB_PATH || './storage/data/bookmarks.db';
 const publicPath = join(__dirname, '..', 'public');
 
 @Module({
   imports: [
-    WinstonModule.forRoot(winstonConfig),
+    WinstonModule.forRootAsync({ inject: [AppConfigService], useFactory: buildWinstonConfig }),
     SequelizeModule.forRoot({
       dialect: 'sqlite',
       storage: dbPath,
