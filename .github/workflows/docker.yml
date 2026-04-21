@@ -69,14 +69,10 @@ jobs:
           key: ${{ secrets.UNRAID_SSH_KEY }}
           script: |
             docker pull alex360/my-bookmarks:latest
-            docker stop my-bookmarks 2>/dev/null || true
-            docker rm my-bookmarks 2>/dev/null || true
-            BLOCKING=$(docker ps -q --filter publish=3000)
-            if [ -n "$BLOCKING" ]; then
-              docker stop $BLOCKING && docker rm $BLOCKING
-            fi
+            docker stop My-Bookmarks 2>/dev/null || true
+            docker rm My-Bookmarks 2>/dev/null || true
             docker run -d \
-              --name my-bookmarks \
+              --name My-Bookmarks \
               --restart unless-stopped \
               -p 3000:3000 \
               -v /mnt/user/appdata/my-bookmarks:/app/storage \
