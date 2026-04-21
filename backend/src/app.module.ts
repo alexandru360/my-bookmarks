@@ -13,6 +13,7 @@ import { User } from './users/user.model';
 import { Bookmark } from './bookmarks/bookmark.model';
 import { Category } from './categories/category.model';
 import { buildWinstonConfig } from './logger';
+import { AppConfigModule } from './config/app-config.module';
 import { AppConfigService } from './config/app-config.service';
 
 const dbPath = process.env.DB_PATH || './storage/data/bookmarks.db';
@@ -20,7 +21,8 @@ const publicPath = join(__dirname, '..', 'public');
 
 @Module({
   imports: [
-    WinstonModule.forRootAsync({ inject: [AppConfigService], useFactory: buildWinstonConfig }),
+    AppConfigModule,
+    WinstonModule.forRootAsync({ imports: [AppConfigModule], inject: [AppConfigService], useFactory: buildWinstonConfig }),
     SequelizeModule.forRoot({
       dialect: 'sqlite',
       storage: dbPath,
