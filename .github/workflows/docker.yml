@@ -69,8 +69,11 @@ jobs:
           key: ${{ secrets.UNRAID_SSH_KEY }}
           script: |
             docker pull alex360/my-bookmarks:latest
-            if [ "$(docker ps -aq -f name=^my-bookmarks$)" ]; then
-              docker stop my-bookmarks && docker rm my-bookmarks
+            docker stop my-bookmarks 2>/dev/null || true
+            docker rm my-bookmarks 2>/dev/null || true
+            BLOCKING=$(docker ps -q --filter publish=3000)
+            if [ -n "$BLOCKING" ]; then
+              docker stop $BLOCKING && docker rm $BLOCKING
             fi
             docker run -d \
               --name my-bookmarks \
