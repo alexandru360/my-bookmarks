@@ -72,7 +72,17 @@ jobs:
               echo "WARNING: container My-Bookmarks not found on this server, skipping deployment"
               exit 0
             fi
-            docker stop My-Bookmarks
-            docker rmi alex360/my-bookmarks:latest 2>/dev/null || true
+            PORTS=$(docker inspect My-Bookmarks --format '{{range $p, $conf := .HostConfig.PortBindings}}-p {{(index $conf 0).HostPort}}:{{$p}} {{end}}')
+            VOLS=$(docker inspect My-Bookmarks --format '{{range .HostConfig.Binds}}-v {{.}} {{end}}')
+            ENVS=$(docker inspect My-Bookmarks --format '{{range .Config.Env}}-e "{{.}}" {{end}}')
+            LABELS=$(docker inspect My-Bookmarks --format '{{range $k, $v := .Config.Labels}}-l "{{$k}}={{$v}}" {{end}}')
+            NET=$(docker inspect My-Bookmarks --format '{{.HostConfig.NetworkMode}}')
+            RESTART=$(docker inspect My-Bookmarks --format '{{.HostConfig.RestartPolicy.Name}}')
             docker pull alex360/my-bookmarks:latest
-            docker start My-Bookmarks
+            docker stop My-Bookmarks
+            docker rm My-Bookmarks
+            docker run -d --name My-Bookmarks \
+              --network $NET \
+              --restart $RESTART \
+              $PORTS $VOLS $ENVS $LABELS \
+              alex360/my-bookmarks:latest
