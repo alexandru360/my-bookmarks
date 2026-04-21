@@ -69,4 +69,12 @@ jobs:
           key: ${{ secrets.UNRAID_SSH_KEY }}
           script: |
             docker pull alex360/my-bookmarks:latest
-            docker restart my-bookmarks
+            if [ "$(docker ps -aq -f name=^my-bookmarks$)" ]; then
+              docker stop my-bookmarks && docker rm my-bookmarks
+            fi
+            docker run -d \
+              --name my-bookmarks \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              -v /mnt/user/appdata/my-bookmarks:/app/storage \
+              alex360/my-bookmarks:latest
