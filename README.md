@@ -1,114 +1,124 @@
-# 🔖 My Bookmarks
+# My Bookmarks
 
-[![Build & Push Docker](https://github.com/alex360/my-bookmarks/actions/workflows/docker.yml/badge.svg)](https://github.com/alex360/my-bookmarks/actions/workflows/docker.yml)
+[![Build & Push Docker](https://github.com/alexandru360/my-bookmarks/actions/workflows/docker.yml/badge.svg)](https://github.com/alexandru360/my-bookmarks/actions/workflows/docker.yml)
 [![Docker Hub](https://img.shields.io/docker/pulls/alex360/my-bookmarks)](https://hub.docker.com/r/alex360/my-bookmarks)
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
-A self-hosted bookmark manager with a browser extension for Chrome and Firefox.
-
-**Features:** Google OAuth · Categories · Tags · Import/Export (Chrome/Firefox HTML, JSON) · Swagger API · Docker single-image
+A self-hosted bookmark manager with Google OAuth, categories, import/export, and a browser extension.
 
 ---
 
-## 🐳 Quick Start with Docker
+## Unraid Installation
 
-```bash
-# 1. Clone
-git clone https://github.com/alex360/my-bookmarks.git
-cd my-bookmarks
+### 1. Add container
 
-# 2. Configure
-cp backend/.env.example .env
-# Edit .env: set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, JWT_SECRET, APP_URL
-
-# 3. Run
-docker compose up -d
-
-# App: http://localhost:3000
-# Swagger: http://localhost:3000/api
-```
-
----
-
-## 📦 Unraid Installation
-
-### Step 1 — Community Apps (CA)
-
-> If you don't have Community Apps installed, go to **Apps → Install Community Apps** first.
-
-1. In Unraid, go to **Apps** → search for **"My Bookmarks"** *(or add manually below)*
-
-### Step 2 — Add container manually
-
-1. Go to **Docker** tab → **Add Container**
-2. Fill in:
+Go to **Docker** tab → **Add Container** and fill in:
 
 | Field | Value |
 |---|---|
-| **Name** | `my-bookmarks` |
+| **Name** | `My-Bookmarks` |
 | **Repository** | `alex360/my-bookmarks:latest` |
 | **Network Type** | `bridge` |
-| **Port** | Host: `3000` → Container: `3000` |
+| **Port** | Host: `3001` → Container: `3000` |
 | **Volume** | Host: `/mnt/user/appdata/my-bookmarks` → Container: `/app/storage` |
 
-3. Add **Environment Variables**:
+### 2. Environment variables
 
-| Variable | Value |
-|---|---|
-| `GOOGLE_CLIENT_ID` | From [Google Cloud Console](https://console.cloud.google.com) |
-| `GOOGLE_CLIENT_SECRET` | From Google Cloud Console |
-| `JWT_SECRET` | Any long random string |
-| `APP_URL` | `http://YOUR_UNRAID_IP:3000` |
+| Variable | Value | Required |
+|---|---|---|
+| `GOOGLE_CLIENT_ID` | From Google Cloud Console | Yes (for login) |
+| `GOOGLE_CLIENT_SECRET` | From Google Cloud Console | Yes (for login) |
+| `JWT_SECRET` | Long random string | Yes |
+| `BACKEND_URL` | `https://your-domain.com` or `http://UNRAID_IP:3001` | Yes |
 
-4. Click **Apply**
+> `JWT_SECRET` is used to sign authentication tokens. Generate one with: `openssl rand -hex 32`
 
-### Step 3 — Google OAuth setup
+> The app starts and runs without Google credentials — login will return 503 until they are set.
+
+### 3. Google OAuth setup
 
 1. Go to [console.cloud.google.com](https://console.cloud.google.com)
 2. Create a project → **APIs & Services** → **Credentials** → **Create OAuth 2.0 Client ID**
 3. Application type: **Web application**
-4. Authorized redirect URIs:
+4. Add to **Authorized JavaScript origins**:
    ```
-   http://YOUR_UNRAID_IP:3000/auth/google/callback
+   https://your-domain.com
    ```
-5. Copy **Client ID** and **Client Secret** into Unraid environment variables
+5. Add to **Authorized redirect URIs**:
+   ```
+   https://your-domain.com/auth/google/callback
+   ```
+6. Copy **Client ID** and **Client Secret** into the Unraid environment variables above
 
-### Step 4 — Done!
+### 4. Done
 
-Open `http://YOUR_UNRAID_IP:3000` → Login with Google → Start saving bookmarks!
+Open `http://UNRAID_IP:3001` → Login with Google → Start saving bookmarks.
 
 ---
 
-## 🧩 Browser Extension
+## CI/CD — Auto-deploy to Unraid
 
-### Install (Chrome)
-1. Download or clone this repo
-2. Go to `chrome://extensions/`
-3. Enable **Developer Mode** (top right toggle)
-4. Click **Load unpacked** → select the `extension/` folder
+Every push to `main` automatically:
+1. Builds and pushes the Docker image to Docker Hub (`alex360/my-bookmarks:latest`)
+2. Connects to your Unraid server via Tailscale + SSH
+3. Stops `My-Bookmarks`, pulls the new image, recreates the container preserving all Unraid config
 
-### Install (Firefox)
+### Required GitHub secrets
+
+| Secret | Description |
+|---|---|
+| `DOCKERHUB_TOKEN` | Docker Hub personal access token (Read/Write) |
+| `TAILSCALE_AUTHKEY` | Tailscale auth key (ephemeral) |
+| `UNRAID_HOST` | Tailscale hostname or IP of your Unraid server |
+| `UNRAID_USER` | SSH user (usually `root`) |
+| `UNRAID_SSH_KEY` | Private SSH key — must be **without passphrase** |
+
+> The SSH key must be added to `/root/.ssh/authorized_keys` on Unraid.
+> Generate a passphrase-free key: `ssh-keygen -t ed25519 -C "github-actions" -f ~/.ssh/unraid_deploy`
+
+---
+
+## Data storage
+
+Everything is stored in the volume mapped to `/app/storage`:
+
+```
+/app/storage/
+├── data/
+│   └── bookmarks.db        SQLite database
+├── logs/
+│   ├── app-YYYY-MM-DD.log
+│   └── error-YYYY-MM-DD.log
+└── config/
+    └── config.json         Auto-generated on first start
+```
+
+`config.json` is created automatically on first run with default values. You can edit it directly or use environment variables (env vars take priority).
+
+---
+
+## Browser Extension
+
+**Chrome:**
+1. Go to `chrome://extensions/` → enable **Developer Mode**
+2. Click **Load unpacked** → select the `extension/` folder
+
+**Firefox:**
 1. Go to `about:debugging#/runtime/this-firefox`
 2. Click **Load Temporary Add-on** → select `extension/manifest.json`
 
-> For permanent Firefox install: sign the extension via [addons.mozilla.org](https://addons.mozilla.org)
-
-### Extension Setup
-1. Click the 🔖 icon in the toolbar
-2. Click ⚙ Settings → set **API URL** to your server (e.g. `http://localhost:3000`)
-3. Click **Login with Google** — a tab opens, you login, the tab closes automatically
-4. Start saving bookmarks with one click!
+**Setup:**
+1. Click the extension icon → Settings → set **API URL** to your server
+2. Click **Login with Google**
 
 ---
 
-## 💻 Local Development
+## Local Development
 
 ```bash
 # Backend
 cd backend
-cp .env.example .env  # Fill in Google OAuth credentials
 npm install
-npm run migration:run
 npm run start:dev     # http://localhost:3000
 
 # Frontend (separate terminal)
@@ -117,39 +127,28 @@ npm install
 npm run dev           # http://localhost:5173
 ```
 
----
-
-## 🗂 Data Storage
-
-Everything is stored in a **single folder** mapped to `/app/storage`:
-
+Set these env vars for local development:
 ```
-/app/storage/
-├── data/
-│   └── bookmarks.db   ← SQLite database
-├── logs/
-│   ├── app-YYYY-MM-DD.log
-│   └── error-YYYY-MM-DD.log
-└── config/            ← reserved for future use
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+JWT_SECRET=any-random-string
+BACKEND_URL=http://localhost:3000
 ```
 
 ---
 
-## 📤 Import / Export
+## Import / Export
 
 | Format | Import | Export |
 |---|---|---|
-| Chrome HTML | ✅ | ✅ |
-| Firefox HTML | ✅ | ✅ |
-| JSON | ✅ | ✅ |
-
-To export from Chrome: `chrome://bookmarks/` → ⋮ → **Export bookmarks**  
-To export from Firefox: **Bookmarks** menu → **Manage Bookmarks** → **Import and Backup** → **Export Bookmarks to HTML**
+| Chrome HTML | yes | yes |
+| Firefox HTML | yes | yes |
+| JSON | yes | yes |
 
 ---
 
-## 🔧 API
+## API
 
-Swagger UI available at `http://YOUR_HOST:3000/api`
+Swagger UI: `http://YOUR_HOST:3001/api`
 
 All endpoints require `Authorization: Bearer <JWT>` except `/auth/google`.
