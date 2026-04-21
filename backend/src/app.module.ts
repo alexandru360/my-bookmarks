@@ -34,7 +34,7 @@ const publicPath = join(__dirname, '..', 'public');
     ...(existsSync(publicPath)
       ? [ServeStaticModule.forRoot({
           rootPath: publicPath,
-          exclude: ['/bookmarks/*rest', '/categories/*rest', '/auth/*rest', '/import-export/*rest'],
+          exclude: ['/bookmarks/*rest', '/categories/*rest', '/auth/google/*rest', '/auth/me', '/import-export/*rest', '/api/*rest'],
         })]
       : []),
     AuthModule,
