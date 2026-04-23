@@ -29,6 +29,25 @@ function showStatus(msg, type) {
   setTimeout(() => el.classList.add('hidden'), 3000);
 }
 
+// ── Tab switching ─────────────────────────────────────────────
+let activeTab = 'save';
+
+function switchTab(tabName) {
+  activeTab = tabName;
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  $('tab-save').classList.toggle('hidden', tabName !== 'save');
+  $('tab-browse').classList.toggle('hidden', tabName !== 'browse');
+  if (tabName === 'browse') {
+    loadBookmarks();
+  }
+}
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
 // ── Load categories into select ───────────────────────────────
 async function loadCategories(apiUrl, token) {
   try {
@@ -38,7 +57,6 @@ async function loadCategories(apiUrl, token) {
     if (!res.ok) return;
     const cats = await res.json();
     const sel = $('category');
-    // Keep the "None" option
     sel.innerHTML = '<option value="">— None —</option>';
     cats.forEach(c => {
       const opt = document.createElement('option');
@@ -48,6 +66,75 @@ async function loadCategories(apiUrl, token) {
     });
   } catch {}
 }
+
+// ── Load bookmarks list ───────────────────────────────────────
+let searchTimeout = null;
+
+async function loadBookmarks() {
+  const { apiUrl, token } = await getConfig();
+  const list = $('bookmarks-list');
+  const search = $('search-input').value.trim();
+  list.innerHTML = '<p class="list-hint">Loading…</p>';
+
+  try {
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    const res = await fetch(`${apiUrl}/bookmarks${params}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const bookmarks = await res.json();
+
+    if (!bookmarks.length) {
+      list.innerHTML = '<p class="list-hint">No bookmarks found.</p>';
+      return;
+    }
+
+    list.innerHTML = '';
+    bookmarks.forEach(bm => {
+      const item = document.createElement('a');
+      item.className = 'bookmark-item';
+      item.href = bm.url;
+      item.target = '_blank';
+      item.rel = 'noopener noreferrer';
+      item.title = bm.url;
+
+      const favicon = document.createElement('img');
+      favicon.className = 'bm-favicon';
+      favicon.width = 16;
+      favicon.height = 16;
+      if (bm.favicon) {
+        favicon.src = bm.favicon;
+        favicon.onerror = () => { favicon.src = ''; favicon.style.display = 'none'; };
+      } else {
+        favicon.style.display = 'none';
+      }
+
+      const info = document.createElement('div');
+      info.className = 'bm-info';
+
+      const title = document.createElement('span');
+      title.className = 'bm-title';
+      title.textContent = bm.title || bm.url;
+
+      const url = document.createElement('span');
+      url.className = 'bm-url';
+      url.textContent = bm.url;
+
+      info.appendChild(title);
+      info.appendChild(url);
+      item.appendChild(favicon);
+      item.appendChild(info);
+      list.appendChild(item);
+    });
+  } catch (err) {
+    list.innerHTML = `<p class="list-hint error">Error: ${err.message}</p>`;
+  }
+}
+
+$('search-input').addEventListener('input', () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(loadBookmarks, 300);
+});
 
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
@@ -85,6 +172,10 @@ async function init() {
   }
 
   await loadCategories(apiUrl, token);
+
+  if (activeTab === 'browse') {
+    loadBookmarks();
+  }
 }
 
 // ── Save bookmark ─────────────────────────────────────────────
@@ -134,7 +225,7 @@ $('login-btn').addEventListener('click', async () => {
 });
 
 $('settings-btn').addEventListener('click', async () => {
-  initGeneration++; // cancel any in-flight init()
+  initGeneration++;
   const { apiUrl } = await getConfig();
   $('api-url').value = apiUrl;
   $('settings-status').classList.add('hidden');
