@@ -23,7 +23,7 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "my-bookmarks@localhost",
+      "id": "my-bookmarks@alexandru.badita",
       "strict_min_version": "109.0"
     }
   }
