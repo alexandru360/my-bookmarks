@@ -15,6 +15,7 @@ export default function Dashboard({ user, onLogout }: Props) {
   const [selectedCat, setSelectedCat] = useState<number | null>(null);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null | undefined>(undefined);
   const [showImport, setShowImport] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const loadBookmarks = useCallback(async () => {
     setBookmarks(await getBookmarks(search || undefined, selectedCat || undefined));
@@ -49,7 +50,11 @@ export default function Dashboard({ user, onLogout }: Props) {
     <div className="app-layout">
       <header className="app-header">
         <div className="header-left">
-          <span className="logo-text">🔖 My Bookmarks</span>
+          <button className="btn-menu" onClick={() => setSidebarOpen(true)} aria-label="Open menu">☰</button>
+          <span className="logo-text">
+            <span className="logo-icon">🔖</span>
+            <span className="logo-label"> My Bookmarks</span>
+          </span>
           <input
             className="search-input"
             value={search}
@@ -58,17 +63,18 @@ export default function Dashboard({ user, onLogout }: Props) {
           />
         </div>
         <div className="header-right">
-          <button className="btn btn-secondary" onClick={() => setShowImport(true)}>Import / Export</button>
+          <button className="btn btn-secondary btn-desktop-only" onClick={() => setShowImport(true)}>Import / Export</button>
           <button className="btn btn-primary" onClick={() => setEditingBookmark(null)}>+ Add</button>
           <div className="user-menu">
             {user.avatar ? <img src={user.avatar} alt="" className="avatar" /> : <span className="avatar-placeholder">{user.name[0]}</span>}
             <span className="user-name">{user.name}</span>
-            <button className="btn btn-ghost" onClick={onLogout}>Sign out</button>
+            <button className="btn btn-ghost btn-desktop-only" onClick={onLogout}>Sign out</button>
           </div>
         </div>
       </header>
 
       <div className="app-body">
+        <div className={`sidebar-overlay${sidebarOpen ? ' visible' : ''}`} onClick={() => setSidebarOpen(false)} />
         <CategorySidebar
           categories={categories}
           selected={selectedCat}
@@ -76,6 +82,10 @@ export default function Dashboard({ user, onLogout }: Props) {
           onRefresh={loadCategories}
           counts={catCounts}
           totalCount={bookmarks.length}
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onLogout={onLogout}
+          onImportExport={() => setShowImport(true)}
         />
 
         <main className="main-content">

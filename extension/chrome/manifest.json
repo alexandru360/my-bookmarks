@@ -13,7 +13,8 @@
     }
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
   },
   "icons": {
     "16": "icons/icon16.png",
@@ -23,7 +24,7 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "my-bookmarks@localhost",
-      "strict_min_version": "128.0"
+      "strict_min_version": "109.0"
     }
   }
 }

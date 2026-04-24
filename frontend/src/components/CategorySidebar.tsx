@@ -9,11 +9,15 @@ interface Props {
   onRefresh: () => void;
   counts: Record<number, number>;
   totalCount: number;
+  isOpen: boolean;
+  onClose: () => void;
+  onLogout: () => void;
+  onImportExport: () => void;
 }
 
 const PALETTE = ['#7c3aed','#db2777','#dc2626','#d97706','#16a34a','#0891b2','#4f46e5','#9333ea'];
 
-export default function CategorySidebar({ categories, selected, onSelect, onRefresh, counts, totalCount }: Props) {
+export default function CategorySidebar({ categories, selected, onSelect, onRefresh, counts, totalCount, isOpen, onClose, onLogout, onImportExport }: Props) {
   const [adding, setAdding] = useState(false);
   const [name, setName] = useState('');
   const [color, setColor] = useState(PALETTE[0]);
@@ -35,11 +39,19 @@ export default function CategorySidebar({ categories, selected, onSelect, onRefr
     onRefresh();
   }
 
+  function handleSelect(id: number | null) {
+    onSelect(id);
+    onClose();
+  }
+
   return (
-    <aside className="sidebar">
-      <div className="sidebar-title">Categories</div>
+    <aside className={`sidebar${isOpen ? ' open' : ''}`}>
+      <div className="sidebar-header">
+        <div className="sidebar-title">Categories</div>
+        <button className="sidebar-close" onClick={onClose} aria-label="Close menu">✕</button>
+      </div>
       <ul className="category-list">
-        <li className={`category-item ${selected === null ? 'active' : ''}`} onClick={() => onSelect(null)}>
+        <li className={`category-item ${selected === null ? 'active' : ''}`} onClick={() => handleSelect(null)}>
           <span>🗂</span> All Bookmarks
           <span className="cat-count">{totalCount}</span>
         </li>
@@ -47,7 +59,7 @@ export default function CategorySidebar({ categories, selected, onSelect, onRefr
           <li
             key={cat.id}
             className={`category-item ${selected === cat.id ? 'active' : ''}`}
-            onClick={() => onSelect(cat.id)}
+            onClick={() => handleSelect(cat.id)}
           >
             <span style={{ color: cat.color }}>{cat.icon || '📁'}</span>
             <span className="cat-name">{cat.name}</span>
@@ -75,6 +87,11 @@ export default function CategorySidebar({ categories, selected, onSelect, onRefr
       ) : (
         <button className="btn-add-cat" onClick={() => setAdding(true)}>+ New Category</button>
       )}
+
+      <div className="sidebar-mobile-footer">
+        <button className="btn btn-secondary" onClick={() => { onImportExport(); onClose(); }}>📤 Import / Export</button>
+        <button className="btn btn-ghost" onClick={onLogout}>Sign out</button>
+      </div>
     </aside>
   );
 }
