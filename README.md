@@ -101,11 +101,11 @@ Everything is stored in the volume mapped to `/app/storage`:
 
 **Chrome:**
 1. Go to `chrome://extensions/` → enable **Developer Mode**
-2. Click **Load unpacked** → select the `extension/` folder
+2. Click **Load unpacked** → select the `extension/chrome/` folder
 
 **Firefox:**
 1. Go to `about:debugging#/runtime/this-firefox`
-2. Click **Load Temporary Add-on** → select `extension/manifest.json`
+2. Click **Load Temporary Add-on** → select `extension/firefox/manifest.json`
 
 **Setup:**
 1. Click the extension icon → Settings → set **API URL** to your server
