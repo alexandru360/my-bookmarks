@@ -30,7 +30,7 @@ function showStatus(msg, type) {
 }
 
 // ── Tab switching ─────────────────────────────────────────────
-let activeTab = 'save';
+let activeTab = 'browse';
 
 function switchTab(tabName) {
   activeTab = tabName;
@@ -169,13 +169,17 @@ async function init() {
   if (tab) {
     $('title').value = tab.title || '';
     $('url').value = tab.url || '';
+    const faviconEl = $('page-favicon');
+    if (tab.favIconUrl) {
+      faviconEl.src = tab.favIconUrl;
+      faviconEl.classList.remove('hidden');
+      faviconEl.onerror = () => faviconEl.classList.add('hidden');
+    }
+    try { $('page-domain').textContent = new URL(tab.url).hostname; } catch {}
   }
 
   await loadCategories(apiUrl, token);
-
-  if (activeTab === 'browse') {
-    loadBookmarks();
-  }
+  loadBookmarks();
 }
 
 // ── Save bookmark ─────────────────────────────────────────────

@@ -45,12 +45,16 @@
     <div id="main-section" class="hidden">
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab active" data-tab="save">Save</button>
-        <button class="tab" data-tab="browse">Browse</button>
+        <button class="tab active" data-tab="browse">Browse</button>
+        <button class="tab" data-tab="save">Save</button>
       </div>
 
       <!-- SAVE TAB -->
-      <div id="tab-save">
+      <div id="tab-save" class="hidden">
+        <div class="page-preview">
+          <img id="page-favicon" class="page-favicon hidden" width="16" height="16" />
+          <span id="page-domain" class="page-domain"></span>
+        </div>
         <div class="field">
           <label>Title</label>
           <input type="text" id="title" placeholder="Page title" />
@@ -81,7 +85,7 @@
       </div>
 
       <!-- BROWSE TAB -->
-      <div id="tab-browse" class="hidden">
+      <div id="tab-browse">
         <div class="search-bar">
           <input type="text" id="search-input" placeholder="Search bookmarks…" />
         </div>

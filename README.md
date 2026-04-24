@@ -99,6 +99,9 @@ Everything is stored in the volume mapped to `/app/storage`:
 
 ## Browser Extension
 
+Source: [My-Bookmarks](https://github.com/alexandru360/my-bookmarks)
+
+
 **Chrome:**
 1. Go to `chrome://extensions/` → enable **Developer Mode**
 2. Click **Load unpacked** → select the `extension/chrome/` folder
