@@ -127,7 +127,10 @@ async function loadBookmarks() {
       list.appendChild(item);
     });
   } catch (err) {
-    list.innerHTML = `<p class="list-hint error">Error: ${err.message}</p>`;
+    const p = document.createElement('p');
+    p.className = 'list-hint error';
+    p.textContent = `Error: ${err.message}`;
+    list.replaceChildren(p);
   }
 }
 
