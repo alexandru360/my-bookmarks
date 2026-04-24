@@ -155,3 +155,5 @@ BACKEND_URL=http://localhost:3000
 Swagger UI: `http://YOUR_HOST:3001/api`
 
 All endpoints require `Authorization: Bearer <JWT>` except `/auth/google`.
+
+https://addons.mozilla.org/en-US/developers/addon/my-bookmarks-night-rider-360/edit
